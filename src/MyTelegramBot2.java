@@ -1,23 +1,12 @@
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.Audio;
-import com.pengrad.telegrambot.model.request.*;
+import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendAudio;
-import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SendPhoto;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
-import java.awt.*;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MyTelegramBot2 {
 
@@ -25,78 +14,79 @@ public class MyTelegramBot2 {
 
         TelegramBot telegramBot = new TelegramBot(getTokenBot());
 
+//        Document doc = null;
+//        try {
+//            doc = Jsoup.connect("https://audioskazki-online.ru/popular").get();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        Map<String, String> map = new HashMap<>();
+        map.put("Винни Пух", "https://woogy.ru/skazki/miln/1.mp3");
+        map.put("Айболит", "https://woogy.ru/skazki/chukovskiy/aibolit.mp3");
+        map.put("Курочка Ряба", "https://woogy.ru/skazki/russkie/kurochka-ryaba.mp3");
+        map.put("Сказка о рыбаке и рыбке", "https://woogy.ru/skazki/pushkin/skazka-o-rybake-i-rybke.mp3");
+        map.put("Колобок", "https://woogy.ru/skazki/russkie/kolobok.mp3");
+
 
         telegramBot.setUpdatesListener(updates -> {
             updates.forEach(upd -> {
                 long chatId = upd.message().chat().id();
                 String incomeMessage = upd.message().text();
-
+                String linkToAudio = null;
                 //приветственное сообщение (обработка команд)
-                if (incomeMessage.equals("/start")) {
+                if (incomeMessage.equals("/start") || incomeMessage.equals("/menu")) {
                     String result = "Привет " + upd.message().chat().username() + "\n" + "Меня зовут бот-сказочник. Какую сказку ты хочешь услышать?";
+                    // приветственное фото
                     String photoPath = "https://forum.pushkino.org/uploads/post-51-1209587921.jpg";
                     SendPhoto photo = new SendPhoto(chatId, photoPath);
-                    SendMessage request = new SendMessage(chatId, result);
                     telegramBot.execute(photo);
+                    SendMessage request = new SendMessage(chatId, result);
+
                     telegramBot.execute(request);
-                    sendMenu(telegramBot, chatId, "Меню:");
+                    request = new SendMessage(chatId, "Меню:");
 
-
-                } else {
-                    if (incomeMessage.equals("Три поросенка")) {
-                        Document doc = null;
-                        try {
-                            doc = Jsoup.connect("https://www.hobobo.ru/audioskazki/sbornik-skazok-mp3/tri-porosenka-online/").get();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        Elements text = doc.select("audio");
-
-                        //<a class="jp-playlist-item-free" href="https://www.hobobo.ru/assets/uploads/audio/tri-porosenka.mp3" tabindex="-1" download="">
-
-                       String result = text.attr("src");
-                        //String result="https://www.hobobo.ru/assets/uploads/audio/tri-porosenka.mp3";
-                        SendAudio audio=new SendAudio(chatId,result);
-                        telegramBot.execute(audio);
-
+                    String[] buttons = new String[map.size()];
+                    int i = 0;
+                    for (Map.Entry<String, String> mapKey : map.entrySet()) {
+                        buttons[i] = mapKey.getKey();
+                        i++;
                     }
 
+                    request.replyMarkup(new ReplyKeyboardMarkup(buttons));
+                    telegramBot.execute(request);
 
-                    //logica
+                } else {
+
+                    System.out.println(incomeMessage);
+
+                    for (Map.Entry<String, String> mapResult : map.entrySet()) {
+                        if (mapResult.getKey().equals(incomeMessage)) {
+                            linkToAudio = String.valueOf(mapResult.getValue());
+                        }
+                    }
+                    try {
+
+
+                        if (!linkToAudio.isEmpty()) {
+                            SendAudio audio = new SendAudio(chatId, linkToAudio);
+                            telegramBot.execute(audio);
+                        } else {
+                            SendMessage request = new SendMessage(chatId, upd.message().chat().username() + ", если меню пропало набери /menu");
+                            telegramBot.execute(request);
+                        }
+
+                    } catch (NullPointerException e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
-
             });
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
-
     }
-
 
     private static String getTokenBot() {
         return "5461332993:AAGQ7DPd7_oY6hvWF_1WpSzWsxIuyLhF-0c";
-    }
-
-    //меню
-    private static synchronized void getMenu() {
-//        InlineKeyboardMarkup inlineKeyboardMarkup=new InlineKeyboardMarkup(
-//                new InlineKeyboardButton[]{
-//                      new InlineKeyboardButton("Колобок").url("view-source:https://nukadeti.ru/audioskazki/kolobok"),
-//                      new InlineKeyboardButton("Маша и медведь").url("https://nukadeti.ru/audioskazki/masha_i_medved")
-//
-//                }
-
-
-    }
-
-    private static void sendMenu(TelegramBot bot, long chatId, String message) {
-        SendMessage request = new SendMessage(chatId, message);
-        String[] buttons = new String[3];
-        buttons[0] = "Три поросенка";
-        buttons[1] = "Маша и медведь";
-        buttons[2] = "Морозко";
-
-        request.replyMarkup(new ReplyKeyboardMarkup(buttons));
-        bot.execute(request);
     }
 
 

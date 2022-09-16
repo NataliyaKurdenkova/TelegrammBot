@@ -5,28 +5,32 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.lang.reflect.MalformedParameterizedTypeException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class JsoupTest {
     public static void main(String[] args) throws IOException {
 
-      //Document doc = Jsoup.connect("https://www.hobobo.ru/audioskazki/sbornik-skazok-mp3/tri-porosenka-online/").get();
-      Document doc = Jsoup.connect("https://nukadeti.ru/audioskazki/dlya-detej-3-let").get();
-        //Document doc = Jsoup.connect("https://www.hobobo.ru/assets/uploads/audio/tri-porosenka.mp3").get();
-       // System.out.println(doc.title());
-//        el.select("a[href]") - finds links (a tags with href attributes)
-//        el.select("a[href*=example.com]") - finds links pointing to example.com (loosely)
+        Document doc = Jsoup.connect("https://audioskazki-online.ru/popular").get();
+//        System.out.println(doc.title());
+//        el.select("a[href]")
+//        el.select("a[href*=example.com]")
+//        el.select("body > div");
+//        el.select("body > div.content"); comtent - это класс
 
-        Elements ssilka = doc.select("div.player-wrap"); //doc.select("a.jp-playlist-item-free")
-       // String text=ssilka.text();
-        String result="";
-        for (Element a : ssilka) {
-           // if (a.attr("data-files").equals("bratya_grimm_belosnezhka_i_sem_gnomov.mp3")){
-                   // result=a.text();
-
-      //  }
-            result=ssilka.text();
-            System.out.println(result);
+        Elements select = doc.select("li[data-title]");
+        System.out.println(select);
+        Map<String, String> map = new HashMap<>();
+        for (Element element : select) {
+            String s = element.getElementsByAttribute("data-title").toString();
+            String v = element.childNode(1).toString();
+            System.out.println(v);
+            String s1 = s.split("data-title=\"")[1].split("\"")[0];
+            String v1 = v.split("data-src=\"")[1].split("\"")[0];
+            map.put(s1, v1);
+        }
+        System.out.println("");
 
     }
-}
 }
