@@ -20,17 +20,17 @@ public class JsoupTest {
 //        el.select("body > div.content"); comtent - это класс
 
         Elements select = doc.select("li[data-title]");
-        System.out.println(select);
+        //System.out.println(select);
         Map<String, String> map = new HashMap<>();
         for (Element element : select) {
             String s = element.getElementsByAttribute("data-title").toString();
             String v = element.childNode(1).toString();
-            System.out.println(v);
+           // System.out.println(v);
             String s1 = s.split("data-title=\"")[1].split("\"")[0];
             String v1 = v.split("data-src=\"")[1].split("\"")[0];
             map.put(s1, v1);
         }
-        System.out.println("");
+        System.out.println(map);
 
     }
 }
